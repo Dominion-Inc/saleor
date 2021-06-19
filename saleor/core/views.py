@@ -4,6 +4,9 @@ from django.template.response import TemplateResponse
 from urllib.parse import unquote
 import requests
 from .forms import ResetPassword
+import logging
+
+logger = logging.getLogger(__name__)
 
 def home(request):
     storefront_url = os.environ.get("STOREFRONT_URL", "")
@@ -19,7 +22,7 @@ def confirm_mail(request):
     email = unquote(request.GET.get('email'))
     token = request.GET.get('token')
 
-    print("email:", email)
+    logger.debug("email: %s", email)
     query = """
     mutation confirmAccount($email:String!,$token:String!){
         confirmAccount(email:$email,token:$token){
@@ -43,8 +46,7 @@ def confirm_mail(request):
     
     response = requests.post(url=URL, json=json)
 
-    print("************************************************************")
-    print("response:", response.json())
+    logger.debug("response json: %s", response.json())
     if response.json()["data"]["confirmAccount"]["user"] is None:
         error = response.json()["data"]["confirmAccount"]["accountErrors"][0]["message"]
         message = error
@@ -54,7 +56,7 @@ def confirm_mail(request):
             {"message":message},
         )
     else :
-        print("response isActive= ", response.json()["data"]["confirmAccount"]["user"]["isActive"])
+        logger.debug("response isActive= %s", response.json()["data"]["confirmAccount"]["user"]["isActive"])
         message = "Email verified."
         return TemplateResponse(
             request,
@@ -72,11 +74,12 @@ def forgot_password(request):
         
         GRAPHQL_URL = os.environ.get("GRAPHQL_URL", "http://0.0.0.0:8000/graphql/")
 
-        print("new_password: {}".format(new_password))
-        print("confirm_new_password: {}".format(confirm_new_password))
+        logger.debug("new_password: %s", new_password)
+        logger.debug("confirm_new_password: %s", confirm_new_password)
+
         if form.is_valid():
-            print('email: {}'.format(email))
-            print('password: {}'.format(token))
+            logger.debug('email: %s', email)
+            logger.debug('password: %s', token)
 
             query = """
             mutation setPassword($email:String!,$password:String!,$token:String!){
@@ -86,6 +89,7 @@ def forgot_password(request):
                     isActive
                     }
                     accountErrors{
+                        field
                         message
                     }
                 }
@@ -102,10 +106,9 @@ def forgot_password(request):
             }
             URL = GRAPHQL_URL
             response = requests.post(url=URL, json=json)
-            print("***********************************************")
             # The response from server can be empty (in case of timeout)
             try:
-                print("response.json(): {}".format(response.json()))
+                logger.debug("response.json(): %s",response.json())
                 # check if there were any errors
                 if response.json()["data"]["setPassword"]["accountErrors"]==[]:
                     return TemplateResponse(request, 'forgot_password/password_reset_success.html')
@@ -115,7 +118,7 @@ def forgot_password(request):
                     return TemplateResponse(request, 'forgot_password/password_reset_fail.html', {'message': error})
             # if the response from the server is empty then display error message
             except:
-                print("json: : {}".format(json))
+                logger.debug("json: : %s",json)
             return TemplateResponse(request, 'forgot_password/password_reset_fail.html', {'message': 'Empty response from server.'})
     else:
         email = unquote(request.GET.get('email'))
