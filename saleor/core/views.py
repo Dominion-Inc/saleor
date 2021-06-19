@@ -1,10 +1,13 @@
 import os
+from typing import Set
 
 from django.template.response import TemplateResponse
 from urllib.parse import unquote
 import requests
 from .forms import ResetPassword
 import logging
+from ..graphql.account.mutations.base import SetPassword
+from django.core.exceptions import ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -104,22 +107,20 @@ def forgot_password(request):
                     "token" : token
                 }
             }
-            URL = GRAPHQL_URL
-            response = requests.post(url=URL, json=json)
-            # The response from server can be empty (in case of timeout)
+            variables = {
+                    "email" : email,
+                    "password" : new_password,
+                    "token" : token
+            }
+            
+
             try:
-                logger.debug("response.json(): %s",response.json())
-                # check if there were any errors
-                if response.json()["data"]["setPassword"]["accountErrors"]==[]:
-                    return TemplateResponse(request, 'forgot_password/password_reset_success.html')
-                # render reset fail page if there are errors and display error
-                else:
-                    error = response.json()["data"]["setPassword"]["accountErrors"][0]["message"]
-                    return TemplateResponse(request, 'forgot_password/password_reset_fail.html', {'message': error})
-            # if the response from the server is empty then display error message
-            except:
-                logger.debug("json: : %s",json)
-            return TemplateResponse(request, 'forgot_password/password_reset_fail.html', {'message': 'Empty response from server.'})
+                SetPassword._set_password_for_user(email,new_password,token)
+                return TemplateResponse(request, 'forgot_password/password_reset_success.html')
+            except ValidationError as error:
+                error_name = list(error.message_dict.keys())[0]
+                return TemplateResponse(request, 'forgot_password/password_reset_fail.html', {'message': error.message_dict[error_name][0]})
+
     else:
         email = unquote(request.GET.get('email'))
         token = request.GET.get('token')
