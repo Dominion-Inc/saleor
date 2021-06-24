@@ -11,6 +11,7 @@ from . import (
     process_payment,
     refund,
     void,
+    confirm
 )
 
 GATEWAY_NAME = "Stripe"
@@ -106,6 +107,10 @@ class StripeGatewayPlugin(BasePlugin):
         self, payment_information: "PaymentData", previous_value
     ) -> "GatewayResponse":
         return refund(payment_information, self._get_gateway_config())
+
+    @require_active_plugin
+    def confirm_payment(self, payment_information: "PaymentData", previous_value) -> "GatewayResponse":
+        return confirm(payment_information, self._get_gateway_config())
 
     @require_active_plugin
     def void_payment(

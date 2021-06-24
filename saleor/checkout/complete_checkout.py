@@ -42,9 +42,7 @@ from .utils import get_voucher_for_checkout
 
 def _get_voucher_data_for_order(checkout: Checkout) -> dict:
     """Fetch, process and return voucher/discount data from checkout.
-
     Careful! It should be called inside a transaction.
-
     :raises NotApplicable: When the voucher is not applicable in the current checkout.
     """
     voucher = get_voucher_for_checkout(checkout, with_lock=True)
@@ -125,7 +123,6 @@ def _validate_gift_cards(checkout: Checkout):
 
 def _create_line_for_order(checkout_line: "CheckoutLine", discounts) -> OrderLine:
     """Create a line for the given order.
-
     :raises InsufficientStock: when there is not enough items in stock for this variant.
     """
 
@@ -177,7 +174,6 @@ def _prepare_order_data(
     *, checkout: Checkout, lines: Iterable[CheckoutLine], discounts
 ) -> dict:
     """Run checks and return all the data from a given checkout to create an order.
-
     :raises NotApplicable InsufficientStock:
     """
     order_data = {}
@@ -229,13 +225,10 @@ def _prepare_order_data(
 @transaction.atomic
 def _create_order(*, checkout: Checkout, order_data: dict, user: User) -> Order:
     """Create an order from the checkout.
-
     Each order will get a private copy of both the billing and the shipping
     address (if shipping).
-
     If any of the addresses is new and the user is logged in the address
     will also get saved to that user's address book.
-
     Current user's language is saved in the order so we can later determine
     which language to use when sending email.
     """
@@ -382,7 +375,6 @@ def complete_checkout(
     redirect_url=None,
 ) -> Tuple[Optional[Order], bool, dict]:
     """Logic required to finalize the checkout and convert it to order.
-
     Should be used with transaction_with_commit_on_errors, as there is a possibility
     for thread race.
     :raises ValidationError
@@ -413,7 +405,12 @@ def complete_checkout(
         store_customer_id(user, payment.gateway, txn.customer_id)  # type: ignore
 
     action_required = txn.action_required
-    action_data = txn.action_required_data if action_required else {}
+
+    try:
+        tmp_action_data = {'action_required_data': txn.action_required_data, 'payment_data':txn.gateway_response.client_secret}
+    except AttributeError:
+        tmp_action_data = {'action_required_data': txn.action_required_data }
+    action_data = tmp_action_data if action_required else {}
 
     order = None
     if not action_required:
