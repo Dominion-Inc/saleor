@@ -19,7 +19,7 @@ from .models import Payment, Transaction
 
 logger = logging.getLogger(__name__)
 
-GENERIC_TRANSACTION_ERROR = "La transazione è stata negata! Contattaci per maggiori informazioni a !TOBEREPLACED!"
+GENERIC_TRANSACTION_ERROR = "Transaction was unsuccessful"
 ALLOWED_GATEWAY_KINDS = {choices[0] for choices in TransactionKind.CHOICES}
 
 
@@ -32,6 +32,7 @@ def create_payment_information(
     additional_data: Optional[dict] = None,
 ) -> PaymentData:
     """Extract order information along with payment details.
+
     Returns information required to process payment and additional
     billing/shipping addresses for optional fraud-prevention mechanisms.
     """
@@ -80,6 +81,7 @@ def create_payment(
     return_url: str = None,
 ) -> Payment:
     """Create a payment instance.
+
     This method is responsible for creating payment instances that works for
     both Django views and GraphQL mutations.
     """
