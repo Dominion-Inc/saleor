@@ -15,7 +15,7 @@ def home(request):
 
 def pay(request):
     if request.method == 'POST':
-        data = request.get_json()
+        data = json.loads(request.body)
         intent = None
 
         try:
