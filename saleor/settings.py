@@ -221,7 +221,7 @@ MIDDLEWARE = [
 ]
 
 DASHBOARD_URL = os.environ.get("DASHBOARD_URL")
-STOREFRONT_URL = os.eviron.get("STOREFRONT_URL")
+STOREFRONT_URL = os.environ.get("STOREFRONT_URL")
 CORS_ORIGIN_ALLOW_ALL = False
 CORS_ORIGIN_WHITELIST = (
   'http://localhost:8000',
