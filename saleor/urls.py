@@ -24,7 +24,7 @@ urlpatterns = [
         handle_plugin_webhook,
         name="plugins",
     ),
-    url(r"pay/",views.pay)
+    url(r"pay/",csrf_exempt(views.pay))
 ]
 
 if settings.DEBUG:
