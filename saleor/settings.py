@@ -219,7 +219,15 @@ MIDDLEWARE = [
     "saleor.core.middleware.plugins",
     "saleor.core.middleware.jwt_refresh_token_middleware",
 ]
-CORS_ORIGIN_ALLOW_ALL = True
+
+DASHBOARD_URL = os.environ.get("DASHBOARD_URL")
+STOREFRONT_URL = os.eviron.get("STOREFRONT_URL")
+CORS_ORIGIN_ALLOW_ALL = False
+CORS_ORIGIN_WHITELIST = (
+  'http://localhost:8000',
+  DASHBOARD_URL,
+  STOREFRONT_URL,
+)
 
 INSTALLED_APPS = [
     # External apps that need to go before django's
