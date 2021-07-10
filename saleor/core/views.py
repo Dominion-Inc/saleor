@@ -34,7 +34,10 @@ def pay(request):
             # Display error on client
             return json.dumps({'error': e.user_message}), 200
 
-        return generate_response(intent)
+        response = generate_response(intent)
+        response["Access-Control-Allow-Origin"] = "*"
+
+        return response
 
 def generate_response(intent):
     # Note that if your API version is before 2019-02-11, 'requires_action'
