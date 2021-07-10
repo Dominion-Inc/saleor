@@ -209,6 +209,7 @@ if not SECRET_KEY and DEBUG:
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "saleor.core.middleware.request_time",
     "saleor.core.middleware.discounts",
     "saleor.core.middleware.google_analytics",
@@ -218,6 +219,7 @@ MIDDLEWARE = [
     "saleor.core.middleware.plugins",
     "saleor.core.middleware.jwt_refresh_token_middleware",
 ]
+CORS_ORIGIN_ALLOW_ALL = True
 
 INSTALLED_APPS = [
     # External apps that need to go before django's
@@ -252,6 +254,7 @@ INSTALLED_APPS = [
     "saleor.wishlist",
     "saleor.app",
     # External apps
+    "corsheaders",
     "versatileimagefield",
     "django_measurement",
     "django_prices",
