@@ -118,8 +118,8 @@ def order_mark_paid(order_id, token):
     try:    
         is_paid = response["data"]["orderMarkAsPaid"]["order"]["isPaid"]
     except Exception as e:
-        print("could not mark as paid")
-        print("response: {}, exception: {}".format(response,e))
+        logger.exception("could not mark order_id: %s as paid", order_id)
+        logger.debug("response: %s, exception: %s",response,e)
 
     return is_paid
 
