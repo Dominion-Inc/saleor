@@ -13,8 +13,8 @@ from django.core.exceptions import ValidationError
 
 logger = logging.getLogger(__name__)
 URL = os.environ.get("GRAPHQL_URL", "http://0.0.0.0:8000/graphql/")
-EMAIL = os.environ.get("USERNAME")
-PASSWORD = os.environ.get("PASSWORD")
+ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
 
 def home(request):
     storefront_url = os.environ.get("STOREFRONT_URL", "")
@@ -84,8 +84,8 @@ def login():
     """
 
     variables = {
-    "email": EMAIL,
-    "password": PASSWORD
+    "email": ADMIN_EMAIL,
+    "password": ADMIN_PASSWORD
     }
 
     response = graphql_query(url=URL, query=query, variables=variables)
@@ -94,8 +94,8 @@ def login():
         token = response["data"]["tokenCreate"]["token"]
     except:
         logger.exception("login failed, response: %s", response)
-        logger.debug("EMAIL= %s", EMAIL)
-        logger.debug("PASSWORD= %s", PASSWORD)
+        logger.debug("EMAIL= %s", ADMIN_EMAIL)
+        logger.debug("PASSWORD= %s", ADMIN_PASSWORD)
     customerId = response["data"]["tokenCreate"]["user"]["id"]
     
     return token
