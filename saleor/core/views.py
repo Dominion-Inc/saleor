@@ -12,6 +12,9 @@ from ..graphql.account.mutations.base import SetPassword
 from django.core.exceptions import ValidationError
 
 logger = logging.getLogger(__name__)
+URL = os.environ.get("GRAPHQL_URL", "http://0.0.0.0:8000/graphql/")
+EMAIL = os.environ.get("USERNAME")
+PASSWORD = os.environ.get("PASSWORD")
 
 def home(request):
     storefront_url = os.environ.get("STOREFRONT_URL", "")
@@ -44,9 +47,10 @@ def pay(request):
             # Display error on client
             return JsonResponse({'error': e.user_message}, status=200)
 
-        return generate_response(intent)
+        order_id = data["order_id"]
+        return generate_response(intent,order_id)
 
-def generate_response(intent):
+def generate_response(intent, order_id):
     # Note that if your API version is before 2019-02-11, 'requires_action'
     # appears as 'requires_source_action'.
     if intent.status == 'requires_action' and intent.next_action.type == 'use_stripe_sdk':
@@ -58,10 +62,92 @@ def generate_response(intent):
     elif intent.status == 'succeeded':
         # The payment didn’t need any additional actions and completed!
         # Handle post-payment fulfillment
+
+        # Mark the order as paid
+        token = login()
+        order_mark_paid(order_id, token)
         return JsonResponse({'success': True}, status=200)
     else:
         # Invalid status
         return JsonResponse({'error': 'Invalid PaymentIntent status'}, status=500)
+
+def login():
+    query = """
+        mutation login($email:String!,$password:String!){
+            tokenCreate(email:$email, password:$password){
+                token
+                user{
+                id
+                }
+            }
+        }
+    """
+
+    variables = {
+    "email": EMAIL,
+    "password": PASSWORD
+    }
+
+    response = graphql_query(url=URL, query=query, variables=variables)
+    
+    try:
+        token = response["data"]["tokenCreate"]["token"]
+    except:
+        print("login faild, response: {}".format(response))
+    customerId = response["data"]["tokenCreate"]["user"]["id"]
+    
+    return token
+
+def order_mark_paid(order_id, token):
+    query = """
+    mutation markPaid($id:ID!){
+        orderMarkAsPaid(id:$id){
+            order{
+                isPaid
+            }
+        }
+    }
+    """
+    variables = {
+        "id": order_id
+    }
+
+    response = graphql_query(url=URL, query=query, variables=variables, token=token)
+    try:    
+        is_paid = response["data"]["orderMarkAsPaid"]["order"]["isPaid"]
+    except Exception as e:
+        print("could not mark as paid")
+        print("response: {}, exception: {}".format(response,e))
+
+    return is_paid
+
+def graphql_query(url,query,variables,token=None):
+    json = {
+        "query": query,
+        "variables": variables
+    }
+    headers=None
+    try:
+        if token:
+            headers = {
+                "Authorization" : "JWT {}".format(token)
+            }
+        response = requests.post(url=URL, json=json, headers=headers)
+        json_response = response.json()
+        if "error" in response:  # type: ignore
+            print("Graphql response contains errors %s", json_response)
+            return json_response
+    except requests.exceptions.RequestException as e:
+        print("Fetching query result failed, url: {}".format(url))
+        print("json: {}, headers: {}, exception: {}".format(json, headers, e))
+        return {}
+    except json.JSONDecodeError:
+        content = response.content if response else "Unable to find the response"
+        print(
+            "Unable to decode the response from graphql. Response: %s", content
+        )
+        return {}
+    return json_response  # type: ignore
 
 def _get_client():
     stripe.api_key = os.environ.get("STRIPE_PRIVATE_KEY")
