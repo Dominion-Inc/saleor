@@ -93,7 +93,9 @@ def login():
     try:
         token = response["data"]["tokenCreate"]["token"]
     except:
-        print("login faild, response: {}".format(response))
+        logger.exception("login failed, response: %s", response)
+        logger.debug("EMAIL= %s", EMAIL)
+        logger.debug("PASSWORD= %s", PASSWORD)
     customerId = response["data"]["tokenCreate"]["user"]["id"]
     
     return token
