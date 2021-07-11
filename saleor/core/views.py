@@ -17,7 +17,7 @@ def pay(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         intent = None
-
+        stripe = _get_client()
         try:
             if 'payment_method_id' in data:
                 # Create the PaymentIntent
@@ -34,10 +34,7 @@ def pay(request):
             # Display error on client
             return json.dumps({'error': e.user_message}), 200
 
-        response = generate_response(intent)
-        response["Access-Control-Allow-Origin"] = "*"
-
-        return response
+        return generate_response(intent)
 
 def generate_response(intent):
     # Note that if your API version is before 2019-02-11, 'requires_action'
@@ -55,3 +52,7 @@ def generate_response(intent):
     else:
         # Invalid status
         return json.dumps({'error': 'Invalid PaymentIntent status'}), 500
+
+def _get_client():
+    stripe.api_key = os.environ.get("STRIPE_PRIVATE_KEY")
+    return stripe
