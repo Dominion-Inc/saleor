@@ -214,9 +214,14 @@ def _success_response(
     raw_response=None,
 ):
     currency = currency or get_currency_from_stripe(intent.currency)
+    payment_intent_client_secret = intent.client_secret
+    action_required_data = {
+        "payment_intent_client_secret" : payment_intent_client_secret
+    }
     return GatewayResponse(
         is_success=success,
         action_required=intent.status == "requires_action",
+        action_required_data=action_required_data,
         transaction_id=intent.id,
         amount=amount or get_amount_from_stripe(intent.amount, currency),
         currency=currency,
