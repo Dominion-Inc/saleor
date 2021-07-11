@@ -38,7 +38,9 @@ from . import AddressType, models
 from .checkout_cleaner import clean_checkout_payment, clean_checkout_shipping
 from .models import Checkout, CheckoutLine
 from .utils import get_voucher_for_checkout
+import logging
 
+logger = logging.getLogger(__name__)
 
 def _get_voucher_data_for_order(checkout: Checkout) -> dict:
     """Fetch, process and return voucher/discount data from checkout.
@@ -415,6 +417,7 @@ def complete_checkout(
     action_required = txn.action_required
     action_data = txn.action_required_data if action_required else {}
 
+    logger.debug("action_data = %s", action_data)
     order = None
     if not action_required:
         try:
