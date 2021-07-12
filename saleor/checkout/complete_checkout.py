@@ -419,7 +419,7 @@ def complete_checkout(
 
     logger.debug("action_data = %s", action_data)
     order = None
-    if not action_required or "payment_intent_client_secret" in action_data.keys():
+    if not action_required:
         try:
             order = _create_order(
                 checkout=checkout, order_data=order_data, user=user,  # type: ignore
