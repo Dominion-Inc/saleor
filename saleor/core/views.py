@@ -47,10 +47,11 @@ def pay(request):
             # Display error on client
             return JsonResponse({'error': e.user_message}, status=200)
 
-        order_id = data["order_id"]
-        return generate_response(intent,order_id)
+        # order_id = data["order_id"]
+        # order_id = "T3JkZXI6Mzk="
+        return generate_response(intent)
 
-def generate_response(intent, order_id):
+def generate_response(intent):
     # Note that if your API version is before 2019-02-11, 'requires_action'
     # appears as 'requires_source_action'.
     if intent.status == 'requires_action' and intent.next_action.type == 'use_stripe_sdk':
@@ -65,7 +66,7 @@ def generate_response(intent, order_id):
 
         # Mark the order as paid
         token = login()
-        order_mark_paid(order_id, token)
+        # order_mark_paid(order_id, token)
         return JsonResponse({'success': True}, status=200)
     else:
         # Invalid status
@@ -101,6 +102,7 @@ def login():
     return token
 
 def order_mark_paid(order_id, token):
+    is_paid = ""
     query = """
     mutation markPaid($id:ID!){
         orderMarkAsPaid(id:$id){
