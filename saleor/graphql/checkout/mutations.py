@@ -827,7 +827,8 @@ class CheckoutComplete(BaseMutation):
                         order=order, confirmation_needed=False, confirmation_data={}
                     )
                 raise e
-
+            print("checkout",checkout)
+            print("payment", data.get("payment_data", {}))
             order, action_required, action_data = complete_checkout(
                 checkout=checkout,
                 payment_data=data.get("payment_data", {}),
