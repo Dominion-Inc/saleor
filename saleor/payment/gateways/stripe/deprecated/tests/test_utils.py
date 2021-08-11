@@ -3,8 +3,8 @@ from math import isclose
 
 from django_countries import countries
 
-from ....interface import AddressData
-from ....utils import create_payment_information
+from .....interface import AddressData
+from .....utils import create_payment_information
 from ..utils import (
     get_amount_for_stripe,
     get_amount_from_stripe,
@@ -67,6 +67,18 @@ def test_get_payment_billing_fullname_no_billing(payment_dummy):
 
     assert not payment_info.billing
     assert get_payment_billing_fullname(payment_info) == ""
+
+
+def test_get_payment_customer_email(payment_dummy, checkout, customer_user):
+    checkout.user = customer_user
+    checkout.email = "old@exampe.com"
+    checkout.save()
+    payment_dummy.order = None
+    payment_dummy.checkout = checkout
+    payment_dummy.save()
+
+    payment_info = create_payment_information(payment_dummy)
+    assert payment_info.customer_email == checkout.user.email
 
 
 def test_shipping_address_to_stripe_dict(address):
